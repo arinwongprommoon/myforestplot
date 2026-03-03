@@ -98,6 +98,13 @@ def count_category_frequency(
     df_nobs = ser_sum.reset_index().rename(
         columns={"level_0": "item", "level_1": "category", 0: "nobs"}
     )
+    # If there is only one categorical variable, the name of the categorical
+    # variable gets used as the column name; otherwise it would have been
+    # "level_0".
+    if df_nobs.columns[0] != "item":
+        # Index objects do not support mutable assignments, see
+        # https://stackoverflow.com/a/69173722
+        df_nobs.columns = ["item", *df_nobs.columns[1:]]
 
     df_nobs.insert(0, column="category", value=df_nobs.pop("category"))
     df_nobs.insert(1, column="item", value=df_nobs.pop("item"))
