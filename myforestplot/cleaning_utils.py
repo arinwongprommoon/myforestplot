@@ -8,7 +8,7 @@ def statsmodels_fitting_result_dataframe(
     res,
     alpha: float = 0.05,
     accessor: Callable[[np.array], np.array] = np.exp,
-    ) -> pd.DataFrame:
+) -> pd.DataFrame:
     """Create category and item columns from the statsmodels result.
     Categorical results are divided into original column name (category) and
     its items (item).
@@ -38,7 +38,7 @@ def statsmodels_fitting_result_dataframe(
     # Insert the same name for "category" in case of continuous variables.
     cond = df[cate].isnull()
     df[cate] = df[cate].mask(cond, df.index)
-    df = df.reset_index().rename(columns={"index":"item"})
+    df = df.reset_index().rename(columns={"index": "item"})
 
     df.insert(0, column="category", value=df.pop("category"))
     df.insert(1, column="item", value=df.pop("item"))
@@ -49,9 +49,14 @@ def statsmodels_fitting_result_dataframe(
     return df
 
 
-def add_pretty_risk_column(res: pd.DataFrame, risk: str, lower: str, upper: str,
-                           fml: str = ".2f", ref: str = "Ref."
-                           ) -> pd.Series:
+def add_pretty_risk_column(
+    res: pd.DataFrame,
+    risk: str,
+    lower: str,
+    upper: str,
+    fml: str = ".2f",
+    ref: str = "Ref.",
+) -> pd.Series:
     """Add prrety risk string column.
 
     Args:
@@ -62,6 +67,7 @@ def add_pretty_risk_column(res: pd.DataFrame, risk: str, lower: str, upper: str,
         fml: formula for f string.
         ref: if point esitmate column is empty, insert this string.
     """
+
     def f(x):
         risk_v = x[risk]
         lower_v = x[lower]
@@ -69,16 +75,15 @@ def add_pretty_risk_column(res: pd.DataFrame, risk: str, lower: str, upper: str,
         s = f"{risk_v:{fml}} ({lower_v:{fml}}, {upper_v:{fml}})"
         return s
 
-    ser = (res.apply(f, axis=1)
-           .mask(res[risk].isnull(), ref)
-           )
+    ser = res.apply(f, axis=1).mask(res[risk].isnull(), ref)
     return ser
 
 
-def count_category_frequency(df: pd.DataFrame,
-                             categorical_cols: List[str],
-                             impute_continuous: bool = True,
-                             ) -> pd.DataFrame:
+def count_category_frequency(
+    df: pd.DataFrame,
+    categorical_cols: List[str],
+    impute_continuous: bool = True,
+) -> pd.DataFrame:
     """Count category frequency.
 
     Args:
@@ -88,30 +93,22 @@ def count_category_frequency(df: pd.DataFrame,
             imputed for item and number of observations (nobs).
     """
     n = df.shape[0]
-    sers = [(df[c]
-             .value_counts()
-             .to_frame()
-             .stack()
-             )
-             for c in categorical_cols]
+    sers = [(df[c].value_counts().to_frame().stack()) for c in categorical_cols]
     ser_sum = pd.concat(sers)
-    df_nobs = (ser_sum
-               .reset_index()
-               .rename(columns={"level_0": "item",
-                                "level_1": "category",
-                                0:"nobs"}
-                       )
-               )
+    df_nobs = ser_sum.reset_index().rename(
+        columns={"level_0": "item", "level_1": "category", 0: "nobs"}
+    )
 
     df_nobs.insert(0, column="category", value=df_nobs.pop("category"))
     df_nobs.insert(1, column="item", value=df_nobs.pop("item"))
     return df_nobs
 
 
-def sort_category_item(df_: pd.DataFrame,
-                       order: List[str],
-                       item_order: Dict[str, List[str]] = None,
-                       ) -> pd.DataFrame:
+def sort_category_item(
+    df_: pd.DataFrame,
+    order: List[str],
+    item_order: Dict[str, List[str]] = None,
+) -> pd.DataFrame:
     """Sort category and item based on categorical values.
 
     Args:
@@ -129,8 +126,8 @@ def sort_category_item(df_: pd.DataFrame,
         dfM = df_[cond]
         if c in item_order.keys():
             lis = item_order[c]
-            sort_dic = {l:i for i,l in enumerate(lis)}
-            dfM = dfM.sort_values(by="item",key=lambda x: x.replace(sort_dic))
+            sort_dic = {l: i for i, l in enumerate(lis)}
+            dfM = dfM.sort_values(by="item", key=lambda x: x.replace(sort_dic))
         df_sorted = pd.concat((df_sorted, dfM), axis=0)
     return df_sorted
 
@@ -154,13 +151,16 @@ def statsmodels_pretty_result_dataframe(
             If not specified, the order of results from statsmodels is used.
         cont_cols: Columns of continuous variables.
         fml: formula for f string of pretty risk.
-        accessor: Function to access each model result, 
+        accessor: Function to access each model result,
             which is summarized and displayed.
     """
     if res.nobs != data.shape[0]:
-        raise Exception(("Some observations were dropped when fitted, "
-                         "check number of observations"
-                        ))
+        raise Exception(
+            (
+                "Some observations were dropped when fitted, "
+                "check number of observations"
+            )
+        )
     df_res = statsmodels_fitting_result_dataframe(res, alpha=0.05, accessor=accessor)
     if order is None or len(order) == 0:
         order = df_res.category.unique()
@@ -169,16 +169,11 @@ def statsmodels_pretty_result_dataframe(
     else:
         cate_cols = [c for c in order if not c in cont_cols]
     df_nobs = count_category_frequency(data, cate_cols)
-    df_sum = pd.merge(df_res, df_nobs,
-                      on=["category", "item"],
-                      validate="1:1",
-                      how="outer")
+    df_sum = pd.merge(
+        df_res, df_nobs, on=["category", "item"], validate="1:1", how="outer"
+    )
     df_sum = sort_category_item(df_sum, order=order, item_order=item_order)
-    df_sum["risk_pretty"] = add_pretty_risk_column(df_sum,
-                                                   risk="risk",
-                                                   lower=0,
-                                                   upper=1,
-                                                   fml=".2f"
-                                                   )
+    df_sum["risk_pretty"] = add_pretty_risk_column(
+        df_sum, risk="risk", lower=0, upper=1, fml=".2f"
+    )
     return df_sum
-

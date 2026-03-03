@@ -7,4 +7,3 @@ from .cleaning_utils import (
     sort_category_item,
     statsmodels_pretty_result_dataframe,
 )
-

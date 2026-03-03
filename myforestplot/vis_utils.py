@@ -5,12 +5,12 @@ import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 
 
-def obtain_indexes_from_category_item(ser_cate : pd.Series,
-                                      ser_item : pd.Series
-                                      ) -> Tuple[np.array, np.array]:
-    """Create index for category and item from series of 
+def obtain_indexes_from_category_item(
+    ser_cate: pd.Series, ser_item: pd.Series
+) -> Tuple[np.array, np.array]:
+    """Create index for category and item from series of
     category and item for vertically aligned labels and errorbar plot.
-    It is noted that index has negative continuous values, 
+    It is noted that index has negative continuous values,
     starting from 0 to -n.
 
     Args:
@@ -39,7 +39,7 @@ def obtain_indexes_from_category_item(ser_cate : pd.Series,
     y_index_cate = np.array(y_index_cate)
     y_index = np.array(y_index)
 
-    return(y_index_cate, y_index)
+    return (y_index_cate, y_index)
 
 
 def errorbar_forestplot(
@@ -56,7 +56,7 @@ def errorbar_forestplot(
     ref_color: Optional[str] = None,
     label: Optional[str] = None,
     log_scale: bool = False,
-    ):
+):
     """Error bar plot for a forest plot.
 
     Args:
@@ -81,12 +81,9 @@ def errorbar_forestplot(
     y_index = y_index + y_adj
 
     df = df.copy()
-    def_errorbar_kwds = dict(fmt="o",
-                             capsize=5,
-                             markeredgecolor="black",
-                             ecolor="black",
-                             color='white'
-                             )
+    def_errorbar_kwds = dict(
+        fmt="o", capsize=5, markeredgecolor="black", ecolor="black", color="white"
+    )
     errorbar_kwds = set_default_keywords(errorbar_kwds, def_errorbar_kwds)
     def_ref_kwds = dict(marker="s", s=20, color="black")
     ref_kwds = set_default_keywords(ref_kwds, def_ref_kwds)
@@ -100,13 +97,14 @@ def errorbar_forestplot(
     df["xerr_upper"] = df[upper] - df[risk]
 
     cond = df[risk].notnull()
-    ax.errorbar(df.loc[cond, risk],
-                y_index[cond],
-                xerr=df.loc[cond, ["xerr_lower", "xerr_upper"]].T,
-                label=label,
-                zorder=5,
-                **errorbar_kwds
-                )
+    ax.errorbar(
+        df.loc[cond, risk],
+        y_index[cond],
+        xerr=df.loc[cond, ["xerr_lower", "xerr_upper"]].T,
+        label=label,
+        zorder=5,
+        **errorbar_kwds
+    )
 
     cond = df[risk].isnull()
     ref_v = 0 if log_scale else 1
@@ -125,7 +123,7 @@ def embed_strings_forestplot(
     text_kwds: Optional[dict] = None,
     header_kwds: Optional[dict] = None,
     replace: Optional[dict] = None,
-    ):
+):
     """Embed strings/values of one column with header.
 
     Args:
@@ -137,20 +135,19 @@ def embed_strings_forestplot(
         text_kwds = {}
     if header_kwds is None:
         header_kwds = {}
-    ax.text(x, y_header, header, ha="left", va="center",
-            fontsize=fontsize, **header_kwds)
+    ax.text(
+        x, y_header, header, ha="left", va="center", fontsize=fontsize, **header_kwds
+    )
 
     if replace is not None:
         ser = ser.replace(replace)
 
     for y, text in zip(y_index, ser):
-        ax.text(x, y, text, ha="left", va="center",
-                fontsize=fontsize, **text_kwds)
+        ax.text(x, y, text, ha="left", va="center", fontsize=fontsize, **text_kwds)
 
 
-def set_default_keywords(kwds : Optional[dict], def_kwds: dict) -> dict:
-    """Set default keywords arguments.
-    """
+def set_default_keywords(kwds: Optional[dict], def_kwds: dict) -> dict:
+    """Set default keywords arguments."""
     if kwds is None:
         kwds = {}
     for k, v in def_kwds.items():
@@ -159,13 +156,13 @@ def set_default_keywords(kwds : Optional[dict], def_kwds: dict) -> dict:
 
 
 def get_multiple_y_adjs(n: int, scale: float) -> np.array:
-    """For multiple vertical plotting, automatic adjustments of 
+    """For multiple vertical plotting, automatic adjustments of
     y_adj for y_index is needed.
 
     Args:
         n: Number of stratificaitons to be plotted.
         scale: [-scale, scale] is set to be a range of y_adj.
     """
-    y_adjs = [0.5 - 1/(n-1)*i for i in range(n)]
-    y_adjs = np.array(y_adjs)*2*scale
+    y_adjs = [0.5 - 1 / (n - 1) * i for i in range(n)]
+    y_adjs = np.array(y_adjs) * 2 * scale
     return y_adjs
