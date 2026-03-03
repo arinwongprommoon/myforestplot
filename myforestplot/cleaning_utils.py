@@ -108,6 +108,10 @@ def count_category_frequency(
 
     df_nobs.insert(0, column="category", value=df_nobs.pop("category"))
     df_nobs.insert(1, column="item", value=df_nobs.pop("item"))
+    # Force 'item' to be of dtype 'object' so a DataFrame merging step in
+    # statsmodels_pretty_result_dataframe() works.  'item' can be of non-object
+    # dtypes if e.g. categories are all numbers.
+    df_nobs["item"] = df_nobs["item"].astype("object")
     return df_nobs
 
 
