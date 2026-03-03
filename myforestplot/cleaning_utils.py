@@ -18,7 +18,7 @@ def statsmodels_fitting_result_dataframe(
         alpha: The significance level for the confidence interval.
         accessor: Function to access each model result, which is summarized and displayed.
     """
-    df = accessor(res.conf_int(alpha=0.05))
+    df = accessor(res.conf_int(alpha=alpha))
     df["risk"] = accessor(res.params)
     df["pvalues"] = res.pvalues
 
@@ -146,6 +146,7 @@ def sort_category_item(
 def statsmodels_pretty_result_dataframe(
     data: pd.DataFrame,
     res,
+    alpha=0.05,
     order: Optional[List[str]] = None,
     cont_cols: Optional[List[str]] = None,
     item_order: Dict[str, List[str]] = None,
@@ -158,6 +159,7 @@ def statsmodels_pretty_result_dataframe(
     Args:
         data: original dataframe.
         res: statsmodels results.
+        alpha: significance level.
         order : if specified, category is ordered based on this variable.
             If not specified, the order of results from statsmodels is used.
         cont_cols: Columns of continuous variables.
@@ -172,7 +174,7 @@ def statsmodels_pretty_result_dataframe(
                 "check number of observations"
             )
         )
-    df_res = statsmodels_fitting_result_dataframe(res, alpha=0.05, accessor=accessor)
+    df_res = statsmodels_fitting_result_dataframe(res, alpha=alpha, accessor=accessor)
     if order is None or len(order) == 0:
         order = df_res.category.unique()
     if cont_cols is None:
